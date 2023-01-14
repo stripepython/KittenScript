@@ -3,6 +3,10 @@
 
 Block in `KittenScript` like `lua`.
 
+# Website
+PYPI: [https://pypi.org/project/opengame/](https://pypi.org/project/opengame/)         
+Github: [https://github.com/stripepython/KittenScript/](https://github.com/stripepython/KittenScript/)
+
 # Install
 First, you need `python>=3.6` and `pip` or `git`.  
 Then, use `pip` or `git` install it:
