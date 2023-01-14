@@ -1,0 +1,2 @@
+recursive-include KittenScript/src/interpreter/lib/*.kst
+recursive-include KittenScript/src/parse/*.bnf

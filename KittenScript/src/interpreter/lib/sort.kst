@@ -1,0 +1,46 @@
+include "_sort.py"
+
+var MAX_INSERT = 286
+
+function cmp(a, b) do a <= b
+
+function isort(array, cmp)  # Insertion Sort
+    for i = 1 to len(array) then
+        var key = array[i]
+        var j = i - 1
+        while j >= 0 and cmp(key, array[j])  then
+            setitem(array, j + 1, array[j])
+            var j = j - 1
+        end
+        setitem(array, j + 1, key)
+    end
+end
+
+function _partition(arr, left, right, cmp)
+    var tmp = arr[left]
+    while left < right then
+        while left < right and cmp(tmp, arr[right]) then
+            var right = right - 1
+        end
+        setitem(arr, left, arr[right])
+        while left < right and cmp(arr[left], tmp) then
+            var left = left + 1
+        end
+        setitem(arr, right, arr[left])
+    end    
+    setitem(arr, left, tmp)
+    return left
+end
+
+function _quick_sort(arr, left, right, cmp)
+    if right - left <= MAX_INSERT then
+        isort(arr, cmp)
+        return
+    end
+    var mid = _partition(arr, left, right, cmp)
+    _quick_sort(arr, left, mid - 1, cmp)
+    _quick_sort(arr, mid + 1, right, cmp)
+end
+
+function qsort(array, cmp) do _quick_sort(array, 0, len(array) - 1, cmp)  # Quick Sort
+

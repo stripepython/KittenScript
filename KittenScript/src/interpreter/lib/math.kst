@@ -1,0 +1,67 @@
+function floor(dividend, divisor)
+    if divisor == 0 then throw "MathError", "division by zero"
+
+    var rev = false
+    if dividend > 0 then
+        var dividend = -dividend
+  	    var rev = not rev
+    end
+    if divisor > 0 then
+        var divisor = -divisor
+        var rev = not rev
+    end
+    var candidates = [divisor]
+    
+    while candidates[-1] >= dividend - candidates[-1] then
+        append(candidates, candidates[-1] + candidates[-1])
+    end
+    
+    var ans = 0
+    for i = len(candidates) - 1 to -1 step -1 then
+        if candidates[i] >= dividend then
+            var ans = ans + (1 << i)
+            var dividend = dividend - candidates[i]
+        end
+    end
+    
+    return if rev then -ans else ans
+end
+
+var pi = 3.1415924653589793
+var e = 2.718281828459045
+
+function sqrt(n) do n ** 0.5
+function cbrt(n) do n ** (1 / 3)
+
+function max(x, y) do if x >= y then x else y
+function min(x, y) do if x <= y then x else y
+function sum(array)
+    var res = 0
+    for i to len(array) then var res = res + array[i]
+    return res
+end
+
+function gcd(a, b)
+    if a < b then return gcd(b, a)
+    while b != 0 then
+        var tmp = a
+        var a = b
+        var b = tmp % b
+    end
+    return a
+end
+function lcm(a, b) do (a * b) // gcd(a, b)
+
+function factorial(n)
+    var res = 1
+    for i = 1 to n + 1 then var res = res * i
+    return res
+end
+
+function isprime(n)
+    if n == 1 then return false
+    for i = 2 to int(sqrt(n)) + 1 then
+        if n % i == 0 then return false
+    end
+    return true
+end

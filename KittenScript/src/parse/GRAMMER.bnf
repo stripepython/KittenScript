@@ -1,0 +1,61 @@
+factor ::= LPAREN expr RPAREN |
+           (PLUS | MINUS | NOT | XAT | INVERT) factor |
+           INT | FLOAT | BOOL | NULL | STRING |
+           identifier | list-expr | dict-expr
+atom ::= factor (index-expr | call)?
+get-expr ::= atom (POINT identifier)* (index-expr | call)?
+power-expr ::= get-expr ((POW | DOUBLE) get-expr)*
+calc-expr ::= power-expr ((AT | MUL | DIV | FLOOR | MOD | ARROW | QUESTION) power-expr)*
+term-expr ::= calc-expr ((PLUS | MINUS | AND | OR | XOR | LSHIFT | RSHIFT) calc-expr)*
+comp-expr ::= term-expr ((LT | LTE | EE | NE | GT | GTE) term-expr)*
+expr ::= if-expr | for-expr | exit-expr | throw-expr |
+         while-expr | var-expr | func-expr | include-expr | try-expr | del-expr | switch-expr |
+         lambda-expr | assert-expr | set-expr | namespace-expr | using-expr |
+         (comp-expr ((AND | OR) comp-expr)*)
+
+index-expr ::= LBRACKET expr RBRACKET (index-expr | call)*
+call ::= LPAREN (expr (COMMA expr)*)? RPAREN (index-expr | call)*
+
+set-expr ::= ATTR identifier POINT identifier (PLUS | MINUS | AT | MUL | DIV | FLOOR | MOD |
+             AND | OR | XOR | LSHIFT | RSHIFT | POW)? EQ expr
+
+list-expr ::= LBRACKET blanks (expr (COMMA blanks expr)*)? RBRACKET
+dict-expr ::= LBRACE blanks (expr COLON blanks expr (COMMA blanks expr COLON expr)*)? blanks RBRACE
+
+if-expr ::= if-expr-a | if-expr-b
+if-expr-a ::= IF expr THEN stmt (ELIF expr THEN stmt)* (ELSE stmt)?
+if-expr-b ::= IF expr THEN NEWLINE program (ELIF expr THEN NEWLINE program)*
+              (ELSE NEWLINE program)? END
+
+switch-expr ::= SWITCH expr (CASE expr (UNLESS expr)? THEN expr)+ (DEFAULT expr)?
+                | ((NEWLINE)+ (CASE expr (UNLESS expr)? THEN NEWLINE program)+ (DEFAULT program)? END)
+
+var-expr ::= VAR identifier (PLUS | MINUS | AT | MUL | DIV | FLOOR | MOD |
+                            AND | OR | XOR | LSHIFT | RSHIFT | POW)? EQ expr
+del-expr ::= DELETE identifier
+exit-expr ::= EXIT (expr)?
+throw-expr ::= THROW (expr COMMA expr)?
+using-expr ::= USING identifier POINT (identifier | MUL)
+break-expr ::= BREAK
+return-expr ::= RETURN (expr)?
+assert-expr ::= ASSERT expr (COMMA expr)?
+include-expr ::= INCLUDE expr
+continue-expr ::= CONTINUE
+namespace-expr ::= NAMESPACE identifier program END
+
+try-expr ::= TRY (stmt | NEWLINE program) CATCH identifier COMMA identifier THEN
+             (stmt | (NEWLINE program (ELSE program)? (FINALLY program)? END))
+
+for-expr ::= FOR identifier (EQ expr)? TO expr (STEP expr)? THEN
+               ((NEWLINE program (ELSE program)? END) | stmt)
+
+while-expr ::= WHILE expr THEN ((NEWLINE program (ELSE program)? END) | stmt)
+
+func-expr ::= FUNCTION identifier LPAREN (expr (COMMA expr)*)? RPAREN
+              ((DO expr) | (program END))
+lambda-expr ::= LAMBDA (expr (COMMA expr)*)? DO expr
+
+blanks ::= (NEWLINE)*
+
+stmt ::= return-expr | continue-expr | break-expr | PASS | expr
+program ::= blanks (EOF | (stmt blanks stmt)* blanks)

@@ -1,0 +1,54 @@
+namespace Heap
+    function empty(arr) do len(arr) == 0
+
+    function top(arr)
+        if Heap.empty(arr) then throw "MathError", "empty heap"
+        return arr[0]
+    end
+
+    function siftup(arr, e, last)
+        var i = last
+        var j = (last - 1) // 2
+        while i > 0 and e < arr[j] then
+            setitem(arr, i, arr[j])
+            var i = j
+            var j = (j - 1) // 2
+        end
+        setitem(arr, i, e)
+    end
+
+    function push(arr, e)
+        append(arr, null)
+        Heap.siftup(arr, e, len(arr) - 1)
+    end
+
+    function siftdown(arr, e, begin, end_)
+        var i = begin
+        var j = begin * 2 + 1
+        while j < end_ then
+            if j + 1 < end_ and arr[j + 1] < arr[j] then var j = j + 1
+            if e < arr[j] then break
+            setitem(arr, i, arr[j])
+            var i = j
+            var j = 2 * j + 1
+        end
+        setitem(arr, i, e)
+    end
+
+    function pop(arr)
+        if Heap.empty(arr) then throw "MathError", "empty heap"
+        var e0 = arr[0]
+        var e = poplist(arr)
+        if len(arr) > 0 then Heap.siftdown(arr, e, 0, len(arr))
+        return e0
+    end
+
+    function heapify(arr)
+        var end_ = len(arr)
+        for i = end_ // 2 - 1 to -1 step -1 then
+            Heap.siftdown(arr, arr[i], i, end_)
+        end
+    end
+end
+
+using Heap.*
