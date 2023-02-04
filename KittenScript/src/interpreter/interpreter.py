@@ -7,7 +7,8 @@ from .context import Context
 from .table import SymbolTable
 from .values import (
     null, Single, Number, String, Bool,
-    Value, List, Dict, auto, Namespace
+    Value, List, Dict, auto, Namespace,
+    Struct
 )
 from .. import constants, errors
 
@@ -569,15 +570,18 @@ class Interpreter(object):
         interpreter_path = os.path.join(os.path.join(os.path.dirname(__file__), 'lib', module.value))
         if os.path.exists(cwd_path):
             return self._try_include(cwd_path, context, node)
-        if os.path.exists(interpreter_path):
-            return self._try_include(interpreter_path, context, node)
-        return res.failure(errors.IncludeError(
-            node.pos_start, node.pos_end,
-            f'no module named {module.value}', context
-        ))
+        return self._try_include(interpreter_path, context, node)
     
     def _try_include(self, path: str, context, node):
         res = RTResult()
+        if '.' not in path:
+            py_path = path + '.py'
+            ks_path = path + '.kst'
+            if os.path.exists(py_path):
+                path = py_path
+            else:
+                path = ks_path
+        
         lower = path.lower()
         py = ks = False
         for i in constants.PYTHON_MODULE:
@@ -865,3 +869,49 @@ class Interpreter(object):
                 return res.failure(error)
             context.symbol_table.set(attr_name, attr_value)
         return res.success(null.copy())
+    
+    @staticmethod
+    def visit_VarAutoincrementNode(node, context):
+        res = RTResult()
+        name = node.var_name.value
+        val = context.symbol_table.get(name)
+        if val == context.symbol_table.not_found:
+            return res.failure(errors.VariableError(
+                node.pos_start, node.pos_end,
+                f'variable {name} is not defined', context
+            ))
+        if name.startswith('CONST_'):
+            return res.failure(errors.VariableError(
+                node.pos_start, node.pos_end,
+                'auto-increment or auto-decrement were not allowed to apply in const variables',
+                context
+            ))
+        ans, error = val.plus_by(Number(1)) if node.op.type == constants.PLUS else val.minus_by(Number(1))
+        if error:
+            return res.failure(error)
+        ans = auto(ans)
+        context.symbol_table.set(name, ans)
+        return res.success(ans.set_pos(node.pos_start, node.pos_end).set_context(context))
+    
+    @staticmethod
+    def visit_StructNode(node, context):
+        res = RTResult()
+        name = node.name.value if node.name else '<anonymous>'
+        struct = Struct(name, [i.value for i in node.attrs])
+        if node.name:
+            context.symbol_table.set(name, struct)
+        return res.success(struct.set_pos(node.pos_start, node.pos_end).set_context(context))
+    
+    @staticmethod
+    def visit_NewNode(node, context):
+        res = RTResult()
+        val = context.symbol_table.get(node.name.value)
+        if val == context.symbol_table.not_found:
+            return res.failure(errors.VariableError(
+                node.pos_start, node.pos_end,
+                f'struct {node.name} is not defined', context
+            ))
+        val, error = auto(val).new()
+        if error:
+            return res.failure(error)
+        return res.success(auto(val).set_pos(node.pos_start, node.pos_end).set_context(context))

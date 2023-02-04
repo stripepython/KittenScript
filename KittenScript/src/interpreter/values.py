@@ -3,18 +3,21 @@ from .. import constants, errors
 def auto(value):
     if isinstance(value, Value):
         return value
+    attrs = {}
+    if hasattr(value, 'KittenScript_Attrs'):
+        attrs = value.attrs
     if isinstance(value, bool):
-        return Bool(value)
+        return Bool(value).set_attrs(attrs)
     if value is None:
-        return null.copy()
+        return null.copy().set_attrs(attrs)
     if isinstance(value, str):
-        return String(value)
+        return String(value).set_attrs(attrs)
     if isinstance(value, (int, float)):
-        return Number(value)
+        return Number(value).set_attrs(attrs)
     if isinstance(value, list):
-        return List(value)
+        return List(value).set_attrs(attrs)
     if isinstance(value, dict):
-        return Dict(value)
+        return Dict(value).set_attrs(attrs)
     return Value()
 
 
@@ -162,6 +165,9 @@ class Value(object):
             ans.append(res.value)
         return ans, None
     
+    def new(self):
+        return self.get(), None
+    
     def execute(self, args, res):
         return res.failure(errors.FunctionError(
             self.pos_start, self.pos_end,
@@ -268,7 +274,8 @@ class Value(object):
         return null.copy(), None
     
     def set_attrs(self, attrs):
-        self.attrs = attrs.copy()
+        if isinstance(attrs, dict):
+            self.attrs = attrs.copy()
         return self
 
 
@@ -436,6 +443,9 @@ class List(Value):
     
     def iter_by(self):
         return self, None
+    
+    def new(self):
+        return List(self.items.copy()), None
 
 
 class Dict(Value):
@@ -486,6 +496,9 @@ class Dict(Value):
     def iter_by(self):
         return List([List([auto(k), v]) for k, v in self.items.items()]), None
     
+    def new(self):
+        return Dict(self.items.copy()), None
+    
     
 class Namespace(Value):
     def __init__(self, name):
@@ -497,6 +510,45 @@ class Namespace(Value):
     
     def get(self):
         return self
+    
+    
+class _Getter(object):
+    def __init__(self, val):
+        self.val = val
+        
+    def __repr__(self):
+        return self.val.__repr__()
+    
+    
+class Struct(Value):
+    def __init__(self, name, attrs):
+        self.name = name
+        self.attrs = attrs
+        super().__init__()
+
+    def __repr__(self):
+        return f'<struct {self.name}>'
+
+    def get(self):
+        return _Getter(self)
+    
+    def new(self):
+        obj = Object(self.name)
+        for i in self.attrs:
+            obj.attrs[i] = null.copy()
+        return obj, None
+    
+    
+class Object(Value):
+    def __init__(self, name):
+        self.name = name
+        super().__init__()
+    
+    def __repr__(self):
+        return f'<object from struct {self.name}>'
+    
+    def get(self):
+        return _Getter(self)
     
     
 class Printable(object):

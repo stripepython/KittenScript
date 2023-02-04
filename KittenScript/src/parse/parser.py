@@ -94,6 +94,16 @@ class Parser(object):
         if tok.type == constants.IDENTIFIER:
             res.register(self.advance())
             res.register_advancement()
+            if self.current_token.type in (constants.PLUS, constants.MINUS):
+                res.register(self.advance())
+                if self.current_token.type in (constants.PLUS, constants.MINUS):
+                    res.register_advancement()
+                    op = self.current_token
+                    res.register(self.advance())
+                    res.register_advancement()
+                    return res.success(nodes.VarAutoincrementNode(tok, op))
+                    
+                res.register(self.reverse())
             
             return res.success(nodes.VarAccessNode(tok))
         
@@ -1070,6 +1080,59 @@ class Parser(object):
             )
         return res.success(nodes.AttrAssignNode(class_name, attr_name, expr))
 
+    def struct_expr(self):
+        res = ParserResult()
+        if not self.current_token.matches(constants.KEYWORD, 'struct'):
+            return res.failure(errors.InvalidSyntaxError(
+                self.current_token.pos_start, self.current_token.pos_end,
+                'excepted "struct"'
+            ))
+        pos_start = self.current_token.pos_start.copy()
+        res.register(self.advance())
+        res.register_advancement()
+        name = None
+        if self.current_token.type == constants.IDENTIFIER:
+            name = self.current_token
+            res.register(self.advance())
+            res.register_advancement()
+        if self.current_token.type != constants.LBRACE:
+            return res.failure(errors.InvalidSyntaxError(
+                self.current_token.pos_start, self.current_token.pos_end,
+                'excepted "{"'
+            ))
+        res.register(self.advance())
+        res.register_advancement()
+        attrs = []
+        if self.current_token.type == constants.RBRACE:
+            return res.success(nodes.StructNode(name, attrs, pos_start, self.current_token.pos_end.copy()))
+        if self.current_token.type != constants.IDENTIFIER:
+            return res.failure(errors.InvalidSyntaxError(
+                self.current_token.pos_start, self.current_token.pos_end,
+                'excepted an identifier'
+            ))
+        attrs.append(self.current_token)
+        res.register(self.advance())
+        res.register_advancement()
+        while self.current_token.type == constants.COMMA:
+            res.register(self.advance())
+            res.register_advancement()
+            if self.current_token.type != constants.IDENTIFIER:
+                return res.failure(errors.InvalidSyntaxError(
+                    self.current_token.pos_start, self.current_token.pos_end,
+                    'excepted an identifier'
+                ))
+            attrs.append(self.current_token)
+            res.register(self.advance())
+            res.register_advancement()
+        if self.current_token.type != constants.RBRACE:
+            return res.failure(errors.InvalidSyntaxError(
+                self.current_token.pos_start, self.current_token.pos_end,
+                'excepted "}"'
+            ))
+        res.register(self.advance())
+        res.register_advancement()
+        return res.success(nodes.StructNode(name, attrs, pos_start, self.current_token.pos_end.copy()))
+
     def blanks(self, res):
         cnt = 0
         while self.current_token.type == constants.NEWLINE:
@@ -1079,11 +1142,6 @@ class Parser(object):
         return cnt
     
     def expr(self):
-        """
-        expr ::= (comp-expr ((AND | OR) comp-expr)* ) | if-expr | for-expr | exit-expr | throw-expr |
-                 while-expr | var-expr | func-expr | include-expr | try-expr | del-expr | switch-expr |
-                 lambda-expr | assert-expr
-        """
         res = ParserResult()
         tok = self.current_token
     
@@ -1214,6 +1272,25 @@ class Parser(object):
             if res.error:
                 return res
             return res.success(using_expr)
+        
+        if tok.matches(constants.KEYWORD, 'struct'):
+            struct_expr = res.register(self.struct_expr())
+            if res.error:
+                return res
+            return res.success(struct_expr)
+        
+        if tok.matches(constants.KEYWORD, 'new'):
+            res.register(self.advance())
+            res.register_advancement()
+            identifier = self.current_token
+            if identifier.type != constants.IDENTIFIER:
+                return res.failure(errors.InvalidSyntaxError(
+                    identifier.pos_start, identifier.pos_end,
+                    'excepted an identifier'
+                ))
+            res.register(self.advance())
+            res.register_advancement()
+            return res.success(nodes.NewNode(identifier))
         
         left = res.register(self.comp_expr())
         if res.error:

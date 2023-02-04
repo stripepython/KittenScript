@@ -1,4 +1,4 @@
-# from interpreter.values import Value
+# from interpreter.values import Value, Single, PythonFunction
 
 
 class UndefinedType(Value):

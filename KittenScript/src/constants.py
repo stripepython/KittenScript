@@ -79,7 +79,7 @@ KEYWORDS = {'true', 'false', 'null', 'for', 'while', 'to', 'var', 'if', 'elif', 
             'step', 'exit', 'then', 'throw', 'function', 'include', 'do', 'end', 'return',
             'break', 'continue', 'try', 'catch', 'delete', 'lambda', 'assert', 'finally',
             'switch', 'case', 'default', 'and', 'or', 'not', 'pass', 'attr', 'namespace',
-            'using', 'unless'}  # 关键字集合
+            'using', 'unless', 'struct', 'new'}  # 关键字集合
 SPECIAL_KEYWORDS = {
     'true': (BOOL, True),
     'false': (BOOL, False),
@@ -145,5 +145,6 @@ ESCAPE_CHARACTERS = {
 }  # 转义字符表
 
 PYTHON_MODULE = {'.py', '.py3', '.pyw', '.pym', '.pyks'}  # 所有支持的python模块扩展名
+C_MODULE = {'.dll', '.so'}
 
 MAX_RECURSION = 2 ** 26 - 1

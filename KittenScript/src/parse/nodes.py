@@ -531,3 +531,49 @@ class UsingNode(object):
             'namespace': self.namespace_name.as_json(),
             'func': self.func_name.as_json()
         }
+    
+    
+class VarAutoincrementNode(object):
+    def __init__(self, var_name, op):
+        self.var_name = var_name
+        self.op = op
+        
+        self.pos_start = self.var_name.pos_start
+        self.pos_end = self.var_name.pos_end
+        
+    def as_json(self):
+        return {
+            'type': 'autoincrement',
+            'var': self.var_name.as_json(),
+            'op': self.op.as_json()
+        }
+    
+
+class NewNode(object):
+    def __init__(self, name):
+        self.name = name
+        
+        self.pos_start = name.pos_start
+        self.pos_end = name.pos_end
+        
+    def as_json(self):
+        return {
+            'type': 'new',
+            'name': self.name.as_json()
+        }
+
+
+class StructNode(object):
+    def __init__(self, name, attrs, pos_start, pos_end):
+        self.name = name
+        self.attrs = attrs
+        
+        self.pos_start = pos_start
+        self.pos_end = pos_end
+    
+    def as_json(self):
+        return {
+            'type': 'struct',
+            'name': self.name.as_json() if self.name else '<anonymous>',
+            'attrs': [i.as_json() for i in self.attrs]
+        }

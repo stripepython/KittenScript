@@ -1,0 +1,25 @@
+struct node {val, next}
+
+function linked(a)
+    var head = new node
+    var cur = head
+    for i to len(a) then
+        var v = a[i]
+        attr cur.val = v
+        if i != len(a) - 1 then
+            attr cur.next = new node
+            var cur = cur.next
+        end
+    end
+    return head
+end
+
+function show(l)
+    while l != null then
+        print(l.val)
+        try var l = l.next catch $, $ then break
+    end
+end
+
+var lst = linked([1, 2, 3, 4, 5])
+show(lst)

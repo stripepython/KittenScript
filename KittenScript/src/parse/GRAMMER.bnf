@@ -1,7 +1,7 @@
 factor ::= LPAREN expr RPAREN |
            (PLUS | MINUS | NOT | XAT | INVERT) factor |
            INT | FLOAT | BOOL | NULL | STRING |
-           identifier | list-expr | dict-expr
+           identifier (PLUS PLUS | MINUS MINUS) | list-expr | dict-expr
 atom ::= factor (index-expr | call)?
 get-expr ::= atom (POINT identifier)* (index-expr | call)?
 power-expr ::= get-expr ((POW | DOUBLE) get-expr)*
@@ -10,7 +10,8 @@ term-expr ::= calc-expr ((PLUS | MINUS | AND | OR | XOR | LSHIFT | RSHIFT) calc-
 comp-expr ::= term-expr ((LT | LTE | EE | NE | GT | GTE) term-expr)*
 expr ::= if-expr | for-expr | exit-expr | throw-expr |
          while-expr | var-expr | func-expr | include-expr | try-expr | del-expr | switch-expr |
-         lambda-expr | assert-expr | set-expr | namespace-expr | using-expr |
+         lambda-expr | assert-expr | set-expr | namespace-expr | using-expr | struct-expr |
+         new-expr |
          (comp-expr ((AND | OR) comp-expr)*)
 
 index-expr ::= LBRACKET expr RBRACKET (index-expr | call)*
@@ -19,8 +20,8 @@ call ::= LPAREN (expr (COMMA expr)*)? RPAREN (index-expr | call)*
 set-expr ::= ATTR identifier POINT identifier (PLUS | MINUS | AT | MUL | DIV | FLOOR | MOD |
              AND | OR | XOR | LSHIFT | RSHIFT | POW)? EQ expr
 
-list-expr ::= LBRACKET blanks (expr (COMMA blanks expr)*)? RBRACKET
-dict-expr ::= LBRACE blanks (expr COLON blanks expr (COMMA blanks expr COLON expr)*)? blanks RBRACE
+list-expr ::= LBRACKET blanks (expr (COMMA expr)*)? RBRACKET
+dict-expr ::= LBRACE blanks (expr COLON expr (COMMA expr COLON expr)*)? RBRACE
 
 if-expr ::= if-expr-a | if-expr-b
 if-expr-a ::= IF expr THEN stmt (ELIF expr THEN stmt)* (ELSE stmt)?
@@ -33,11 +34,13 @@ switch-expr ::= SWITCH expr (CASE expr (UNLESS expr)? THEN expr)+ (DEFAULT expr)
 var-expr ::= VAR identifier (PLUS | MINUS | AT | MUL | DIV | FLOOR | MOD |
                             AND | OR | XOR | LSHIFT | RSHIFT | POW)? EQ expr
 del-expr ::= DELETE identifier
+new-expr ::= NEW identifier
 exit-expr ::= EXIT (expr)?
 throw-expr ::= THROW (expr COMMA expr)?
 using-expr ::= USING identifier POINT (identifier | MUL)
 break-expr ::= BREAK
 return-expr ::= RETURN (expr)?
+struct-expr ::= STRUCT (identifier)? LBRACE (expr (COMMA expr)*)? RBRACE
 assert-expr ::= ASSERT expr (COMMA expr)?
 include-expr ::= INCLUDE expr
 continue-expr ::= CONTINUE
